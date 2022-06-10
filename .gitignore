@@ -1,0 +1,3 @@
+docker/wordpress/*
+docker/mysql/data/*
+secrets/*

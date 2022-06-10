@@ -1,0 +1,73 @@
+version: '3.9'
+
+services:
+  wordpress:
+    build:
+      context: .
+      dockerfile: wordpress.dockerfile
+    container_name: worspress_container
+    restart: always
+    ports:
+    - 8080:80
+    volumes:
+    - ./docker/wordpress:/var/www/html:rw
+    depends_on:
+      - mysqlbase
+    environment:
+     WORDPRESS_DB_HOST: mysqlbase
+     WORDPRESS_DB_USER_FILE: /run/secrets/db_user
+     WORDPRESS_DB_PASSWORD_FILE: /run/secrets/db_pass
+     WORDPRESS_DB_NAME_FILE: /run/secrets/db_name
+     SERVICE_TAGS: Testing
+    secrets:
+      - db_user
+      - db_pass
+      - db_name
+    networks:
+      draft_network:
+        aliases:
+          - wordpress_host
+  
+  mysqlbase:
+    build:
+      context: .
+      dockerfile: mysql.dockerfile
+    container_name: mysql_container
+    restart: always
+    ports:
+      - 3307:3306
+    volumes:
+      - ./docker/mysql/data:/var/lib/mysql:rw
+      - ./docker/mysql/scripts/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    environment:
+        MYSQL_DATABASE_FILE: /run/secrets/db_name
+        MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_pass
+        SERVICE_TAGS: Testing
+    secrets:
+          - db_name
+          - db_pass
+    networks:
+      draft_network:
+        aliases:
+          - mysql_host
+
+secrets:
+  db_name:
+    file: ./secrets/db_name.txt
+  db_user:
+    file: ./secrets/db_user.txt
+  db_pass:
+    file: ./secrets/db_pass.txt
+volumes:
+  docker: {}
+  mysql: {}
+  wordpress: {}
+  data: {}
+networks:
+  draft_network:
+    name: worspress_net
+    driver: bridge
+    ipam:
+      driver: default
+
+
