@@ -1,3 +1,11 @@
-docker/wordpress/*
+# ignored files
 docker/mysql/data/*
 secrets/*
+docker/wordpress/plugins/*
+docker/wordpress/.htaccess
+docker/wordpress/themes/twentytwenty
+docker/wordpress/themes/twentytwentyone
+docker/wordpress/themes/twentytwentytwo
+
+# vscode 
+.vscode/*

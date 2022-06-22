@@ -1,8 +1,10 @@
-CREATE DATABASE IF NOT EXISTS wordpress1;
+CREATE DATABASE IF NOT EXISTS wordpress;
 
-USE wordpress1;
+/*
 
-CREATE TABLE IF NOT EXISTS user(
+USE wordpress;
+
+CREATE TABLE IF NOT EXISTS users(
     id smallint(8) unsigned not null auto_increment,
     username varchar(20) not null unique,
     fullname varchar(50) not null,
@@ -14,3 +16,4 @@ CREATE TABLE IF NOT EXISTS user(
     datebirth date not null,
     primary key(id)
 );
+*/

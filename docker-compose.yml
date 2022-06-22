@@ -8,9 +8,11 @@ services:
     container_name: worspress_container
     restart: always
     ports:
-    - 8080:80
+      - 8080:80
     volumes:
-    - ./docker/wordpress:/var/www/html:rw
+    - ./docker/wordpress/plugins/:/var/www/html/wp-content/plugins:rw
+    - ./docker/wordpress/themes/:/var/www/html/wp-content/themes:rw
+    - ./docker/wordpress/uploads/:/var/www/html/wp-content/uploads:rw
     depends_on:
       - mysqlbase
     environment:
@@ -28,6 +30,54 @@ services:
         aliases:
           - wordpress_host
   
+  app:
+    build: 
+      context: .
+      dockerfile: php.dockerfile
+    container_name: php-fpm_app_container
+    restart: always
+    working_dir: /var/www
+    volumes:
+      - ./src:/var/www
+    networks:
+      draft_network:
+        aliases:
+          - php-fpm_app_host
+  
+  nginx:
+    image: nginx:alpine
+    container_name: nginx_container
+    restart: always
+    ports: 
+      - 8000:80
+    volumes: 
+      - ./src/:/var/www:rw
+      - ./docker/nginx:/etc/nginx/conf.d
+    depends_on: 
+      - mysqlbase
+    networks: 
+      draft_network:
+        aliases: 
+          - nginx_host
+
+  nginx_basic:
+    build: 
+      context: .
+      dockerfile: nginx.dockerfile
+    container_name: nginx_basic_container
+    restart: always
+    ports:
+      - 8181:80
+    volumes:
+      - ./docker/html:/usr/share/nginx/html:rw
+    depends_on:
+      - mysqlbase
+    networks:
+      draft_network:
+        aliases:
+          - nginx_basic_host
+
+  
   mysqlbase:
     build:
       context: .
@@ -41,28 +91,38 @@ services:
       - ./docker/mysql/scripts/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     environment:
         MYSQL_DATABASE_FILE: /run/secrets/db_name
-        MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_pass
+        MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_root_pass
+        MYSQL_PASSWORD_FILE: /run/secrets/db_pass
+        MYSQL_USER_FILE: /run/secrets/db_user
         SERVICE_TAGS: Testing
     secrets:
           - db_name
+          - db_root_pass
           - db_pass
+          - db_user
     networks:
       draft_network:
         aliases:
           - mysql_host
+  
 
 secrets:
   db_name:
     file: ./secrets/db_name.txt
-  db_user:
-    file: ./secrets/db_user.txt
+  db_root_pass:
+    file: ./secrets/db_root_pass.txt
   db_pass:
     file: ./secrets/db_pass.txt
+  db_user:
+    file: ./secrets/db_user.txt
 volumes:
-  docker: {}
-  mysql: {}
-  wordpress: {}
   data: {}
+  plugins: {}
+  themes: {}
+  html: {}
+  uploads: {}
+  src: {}
+  nginx: {}
 networks:
   draft_network:
     name: worspress_net
